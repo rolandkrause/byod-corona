@@ -1,0 +1,63 @@
+---
+title: "Covid exploration"
+output: html_document
+date: '2022-05-17'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+```{r loading}
+
+# TODO filedownload! 
+corona_raw <- readr::read_csv("data/archive/Characteristics_Corona_patients_version_6 -06122020.csv")
+
+corona_country_codes <- readxl::read_excel("data/Details on the DATASET.xlsx", sheet = "version 6", skip = 35, n_max = 139, col_names = c("country_name", "country_code"))
+
+corona_country <- left_join(corona_raw, corona_country_codes, by= c("country" = "country_code") )
+```
+
+```{r}
+count(corona_country, 
+      country_name, origin) |> 
+  pivot_wider(names_from = origin, values_from = n) |> 
+  filter(`10` > 1| `11` > 1)
+
+summary(corona_raw)
+
+corona_raw |> 
+  count(age_band, country)
+
+count(corona_country, country_name, sort = TRUE)
+
+count(corona_raw, country, sort = TRUE)
+
+corona_raw |> 
+  filter(country==24) |> 
+  count(age_band)
+```
+
+```{r}
+corona_country |> 
+#  mutate(fct_infreq())
+  ggplot() +
+  geom_bar(aes(y = fct_lump_n(country_name, 12), fill = as.factor(severity_illness))) 
+
+```
+
+```{r}
+corona_country |> 
+  sample_n(100000) |> 
+  select(2:3, country_name) |> 
+  pivot_longer(1:2, names_to ="key", values_to = "val" 
+              ) |> 
+    ggplot() +
+  geom_bar(aes(y = fct_lump_n(country_name, 12), fill =as.factor(val))) +
+  facet_wrap(~key)
+
+  
+```
+
